@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFlix - Nền Tảng Xem Phim Trực Tuyến</title>
+
+  <!-- Google Font: Be Vietnam Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#E50914',
+              dark: '#080c14',
+              card: '#111726',
+              accent: '#38bdf8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Plyr & Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-[#080c14] text-slate-100 font-sans antialiased selection:bg-red-600 selection:text-white pb-16 min-h-screen">
+
+  <!-- Header / Navigation -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-[#080c14]/85 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-8">
+        <a href="#home" class="brand-logo tv-focusable flex items-center gap-2 group text-2xl font-black tracking-wider text-red-600" data-page="home">
+          <i class="fa-solid fa-film text-red-600"></i>
+          <span>S<span class="text-white">FLIX</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-1">
+          <button class="nav-link tv-focusable active px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition" data-page="home">Trang chủ</button>
+          <button class="nav-link tv-focusable px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition" data-page="explore">Khám phá</button>
+        </nav>
+      </div>
+
+      <!-- Search bar & Quick controls -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-44 sm:w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="text" id="search-input" class="tv-focusable w-full bg-slate-900/90 border border-white/15 rounded-full pl-9 pr-8 py-1.5 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition" placeholder="Tìm tên phim, diễn viên...">
+          <button id="clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+        <button id="tv-guide-btn" class="tv-focusable p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-sm" title="Hướng dẫn điều khiển">
+          <i class="fa-solid fa-gamepad"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Bottom Bar -->
+  <div class="fixed bottom-0 left-0 right-0 z-40 bg-[#0d1322]/95 backdrop-blur border-t border-white/10 flex md:hidden justify-around py-2">
+    <button class="nav-link tv-focusable flex flex-col items-center text-xs text-red-500 font-medium" data-page="home">
+      <i class="fa-solid fa-house text-base"></i>
+      <span>Trang chủ</span>
+    </button>
+    <button class="nav-link tv-focusable flex flex-col items-center text-xs text-slate-400 font-medium" data-page="explore">
+      <i class="fa-solid fa-compass text-base"></i>
+      <span>Khám phá</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTAINER (SPA PAGES) -->
+  <main class="pt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- PAGE 1: HOME -->
+    <section id="page-home" class="spa-page">
+      <p id="catalog-status" class="catalog-status" role="status">Đang kết nối nguồn phim...</p>
+      <!-- Hero Swiper Slider -->
+      <div class="swiper heroSwiper rounded-2xl overflow-hidden mb-10 shadow-2xl relative">
+        <div class="swiper-wrapper" id="hero-slider-wrapper"></div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next text-white/80 hover:text-white"></div>
+        <div class="swiper-button-prev text-white/80 hover:text-white"></div>
+      </div>
+
+      <!-- Trending Section -->
+      <div class="mb-10">
+        <div class="catalog-heading flex items-center justify-between mb-4">
+          <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <span class="w-2 h-6 bg-red-600 rounded-full inline-block"></span> Phim Đang Thịnh Hành
+          </h2>
+          <button class="text-xs sm:text-sm text-red-400 hover:text-red-300 font-medium" onclick="app.navigate('explore', {category: 'all'})">Xem tất cả <i class="fa-solid fa-chevron-right text-xs"></i></button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="trending-grid"></div>
+      </div>
+
+      <!-- Action Movies Section -->
+      <div class="mb-10">
+        <div class="catalog-heading flex items-center justify-between mb-4">
+          <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <span class="w-2 h-6 bg-amber-500 rounded-full inline-block"></span> Phim Hành Động & Phiêu Lưu
+          </h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="action-grid"></div>
+      </div>
+
+      <!-- Series Section -->
+      <div class="mb-10">
+        <div class="catalog-heading flex items-center justify-between mb-4">
+          <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <span class="w-2 h-6 bg-sky-500 rounded-full inline-block"></span> Phim Bộ Đặc Sắc
+          </h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="series-grid"></div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: EXPLORE / FILTER -->
+    <section id="page-explore" class="spa-page hidden">
+      <nav class="explore-tabs" role="tablist" aria-label="Danh mục phim">
+        <button type="button" role="tab" class="explore-tab tv-focusable" data-explore-type="series" aria-selected="true">Phim bộ</button>
+        <button type="button" role="tab" class="explore-tab tv-focusable" data-explore-type="movies" aria-selected="false">Phim lẻ</button>
+        <button type="button" role="tab" class="explore-tab tv-focusable" data-explore-type="animation" aria-selected="false">Hoạt hình</button>
+      </nav>
+
+      <div class="explore-filters">
+        <h1><i class="fa-solid fa-sliders"></i><span>Bộ lọc</span></h1>
+        <div class="explore-filter-fields">
+          <div>
+            <label for="filter-genre">Thể loại</label>
+            <select id="filter-genre" class="tv-focusable">
+              <option value="all">Tất cả thể loại</option>
+            </select>
+          </div>
+          <div>
+            <label for="filter-country">Quốc gia</label>
+            <select id="filter-country" class="tv-focusable">
+              <option value="all">Tất cả quốc gia</option>
+            </select>
+          </div>
+          <div>
+            <label for="filter-year">Năm</label>
+            <select id="filter-year" class="tv-focusable">
+              <option value="all">Tất cả các năm</option>
+            </select>
+          </div>
+          <div>
+            <label for="filter-language">Ngôn ngữ</label>
+            <select id="filter-language" class="tv-focusable">
+              <option value="all">Tất cả ngôn ngữ</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-slate-400" id="filter-result-count">Hiển thị kết quả</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="explore-grid"></div>
+      <button id="explore-load-more" class="tv-focusable explore-load-more hidden" type="button">Tải thêm phim</button>
+    </section>
+
+    <!-- PAGE 3: WATCH / PLAYER -->
+    <section id="page-watch" class="spa-page hidden">
+      <div class="mb-4">
+        <button onclick="app.goBack()" class="tv-focusable inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium py-1.5 px-3 rounded-lg bg-white/5 hover:bg-white/10 transition">
+          <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </button>
+      </div>
+
+      <!-- Player Frame -->
+      <div class="player-frame bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-6 aspect-video max-h-[70vh] w-full flex items-center justify-center relative">
+        <video id="player" playsinline controls class="w-full h-full"></video>
+        <iframe id="player-embed" class="player-embed hidden" title="Trình phát phim" sandbox="allow-forms allow-scripts allow-same-origin allow-presentation" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+      </div>
+      <p id="watch-source-status" class="watch-source-status hidden" role="status"></p>
+
+      <div class="player-toolbar mb-6 flex items-center justify-between gap-3">
+        <label class="quality-control flex items-center gap-3">
+          <span><i class="fa-solid fa-sliders mr-2"></i>Chất lượng</span>
+          <select id="video-quality" class="tv-focusable" aria-label="Chất lượng video" disabled>
+            <option value="-1">Đang tải...</option>
+          </select>
+        </label>
+        <button id="next-episode-btn" class="tv-focusable next-episode-btn inline-flex items-center gap-2" type="button" disabled>
+          <span>Tập tiếp theo</span><i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Film Info & Controls -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 id="watch-title" class="text-2xl sm:text-3xl font-bold text-white">Tên Phim</h1>
+              <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-400 mt-2">
+                <span id="watch-year" class="bg-white/10 px-2 py-0.5 rounded text-white font-medium">2026</span>
+                <span id="watch-rating" class="text-amber-400 font-semibold"><i class="fa-solid fa-star mr-1"></i>8.8</span>
+                <span id="watch-duration" class="border-l border-white/20 pl-3">120 phút</span>
+                <span id="watch-genre" class="border-l border-white/20 pl-3">Hành Động</span>
+              </div>
+            </div>
+          </div>
+
+          <p id="watch-overview" class="text-slate-300 text-sm leading-relaxed pt-2 border-t border-white/10">Nội dung phim đang cập nhật...</p>
+
+          <!-- Server selection -->
+          <div class="pt-4 border-t border-white/10">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Chọn Server Phát</h3>
+            <div class="flex flex-wrap gap-2" id="server-list"></div>
+          </div>
+        </div>
+
+        <!-- Episodes Selector -->
+        <div class="bg-slate-900/60 p-5 rounded-2xl border border-white/10">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 mb-3 flex items-center justify-between">
+            <span>Danh sách tập</span>
+            <span class="text-xs text-slate-400 font-normal" id="episode-count-badge">Tập 1</span>
+          </h3>
+          <div class="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1" id="episode-list">
+            <!-- Dynamic Episode buttons -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Remote Control Help Modal -->
+  <div id="tv-guide-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-[#111726] border border-white/20 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-white/10">
+        <h3 class="text-lg font-bold flex items-center gap-2 text-red-500">
+          <i class="fa-solid fa-gamepad"></i> Phím Điều Khiển TV & Bàn Phím
+        </h3>
+        <button id="close-guide-btn" class="tv-focusable text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <ul class="text-xs sm:text-sm space-y-2.5 text-slate-300">
+        <li class="flex justify-between items-center"><span class="font-mono bg-white/10 px-2 py-0.5 rounded">↑ ↓ ← →</span> <span>Di chuyển con trỏ 4 hướng (Spatial D-Pad)</span></li>
+        <li class="flex justify-between items-center"><span class="font-mono bg-white/10 px-2 py-0.5 rounded">Enter / OK</span> <span>Chọn phim / Kích hoạt nút bấm</span></li>
+        <li class="flex justify-between items-center"><span class="font-mono bg-white/10 px-2 py-0.5 rounded">Back / ESC</span> <span>Quay lại trang trước / Đóng trình phát</span></li>
+        <li class="flex justify-between items-center"><span class="font-mono bg-white/10 px-2 py-0.5 rounded">Space</span> <span>Tạm dừng / Tiếp tục phát video</span></li>
+        <li class="flex justify-between items-center"><span class="font-mono bg-white/10 px-2 py-0.5 rounded">F</span> <span>Bật / Tắt chế độ toàn màn hình (Fullscreen)</span></li>
+      </ul>
+      <button id="ack-guide-btn" class="tv-focusable w-full mt-6 py-2 bg-red-600 hover:bg-red-700 font-bold rounded-xl text-xs uppercase tracking-wider">Đã hiểu</button>
+    </div>
+  </div>
+
+  <!-- Libraries JS -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <!-- Modular Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/tv-nav.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

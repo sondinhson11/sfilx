@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hộp thư Netflix của tôi</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .app-container {
+            width: min(95vw, 1100px);
+            height: 85vh;
+            height: min(85vh, 900px);
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #141414;
+            border: 1px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(229, 9, 20, 0.25);
+        }
+        .header {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            background: #000;
+        }
+        .header h2 {
+            flex: 0 0 auto;
+            margin: 0;
+            color: #E50914;
+            font-size: 22px;
+        }
+        #btn-refresh {
+            flex: 0 0 auto;
+            min-height: 44px;
+            padding: 10px 20px;
+            border: 0;
+            border-radius: 4px;
+            background: #E50914;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #btn-refresh:disabled { background: #555; cursor: not-allowed; }
+        #status-msg {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+        .main-content {
+            display: flex;
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .email-list {
+            flex: 0 0 35%;
+            min-width: 0;
+            min-height: 0;
+            overflow: auto;
+            border-right: 1px solid #333;
+            background: #1a1a1a;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        .email-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .email-item.active { background: #333; border-left: 4px solid #E50914; }
+        .email-subject {
+            margin-bottom: 6px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+        .email-date { color: #aaa; font-size: 12px; }
+        .email-view {
+            position: relative;
+            flex: 1 1 0;
+            min-width: 0;
+            min-height: 0;
+            background: #fff;
+        }
+        #email-frame { display: none; width: 100%; height: 100%; border: 0; background: #fff; }
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(90%, 32rem);
+            padding: 16px;
+            transform: translate(-50%, -50%);
+            color: #666;
+            text-align: center;
+            font-size: 16px;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            #btn-refresh:hover { background: #f40612; }
+            .email-item:hover { background: #2a2a2a; }
+        }
+        :focus-visible { outline: 2px solid #E50914; outline-offset: -2px; }
+
+        @media (max-width: 768px) {
+            body {
+                padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                    env(safe-area-inset-bottom) env(safe-area-inset-left);
+            }
+            .app-container {
+                width: 100%;
+                height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                max-width: none;
+                border-radius: 0;
+            }
+            .header {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas: "title button" "status status";
+                gap: 7px 12px;
+                padding: 12px clamp(12px, 4vw, 20px);
+            }
+            .header h2 { grid-area: title; min-width: 0; font-size: clamp(17px, 5vw, 21px); }
+            #status-msg {
+                grid-area: status;
+                width: 100%;
+                font-size: 12px;
+                line-height: 1.35;
+                overflow-wrap: anywhere;
+            }
+            #btn-refresh { grid-area: button; min-height: 44px; padding: 8px 14px; }
+            .main-content { flex-direction: column; }
+            .email-list {
+                flex: 0 0 clamp(9rem, 34vh, 17rem);
+                width: 100%;
+                border-right: 0;
+                border-bottom: 1px solid #333;
+            }
+            .email-view { flex: 1 1 0; width: 100%; }
+            .email-item { min-height: 64px; padding: 12px clamp(12px, 4vw, 18px); }
+            .empty-state { font-size: clamp(14px, 4vw, 16px); }
+        }
+        @media (max-width: 768px) and (min-height: 700px) {
+            .email-list { flex-basis: clamp(10rem, 34dvh, 19rem); }
+        }
+        @media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+            .header {
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                grid-template-areas: "title status button";
+                gap: 10px;
+                padding-top: 6px;
+                padding-bottom: 6px;
+            }
+            .header h2 { font-size: clamp(15px, 3.2vw, 19px); }
+            #status-msg { font-size: 11px; }
+            #btn-refresh { min-height: 40px; padding: 6px 12px; }
+            .main-content { flex-direction: row; }
+            .email-list {
+                flex: 0 0 clamp(9rem, 36vw, 18rem);
+                width: auto;
+                border-right: 1px solid #333;
+                border-bottom: 0;
+            }
+            .email-view { width: auto; }
+            .email-item { min-height: 0; padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h2>Hộp thư Netflix</h2>
+            <span id="status-msg">Đang kết nối...</span>
+            <button onclick="fetchEmails()" id="btn-refresh">Tải lại</button>
+        </div>
+        
+        <div class="main-content">
+            <!-- CỘT TRÁI -->
+            <div class="email-list" id="email-list">
+                <!-- Danh sách email được tạo bằng JS -->
+            </div>
+            
+            <!-- CỘT PHẢI -->
+            <div class="email-view">
+                <div id="empty-state" class="empty-state">Vui lòng chọn một email bên trái để xem nội dung</div>
+                <iframe id="email-frame" sandbox="allow-scripts allow-popups allow-forms" title="Nội dung Email"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL của bạn giữ nguyên
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxByZk9hz09xiUQsUk8BnYzJ7Go0GLHU3l08CBA8hi3rah4UZPBui8jW4SkT-W2ybmWUA/exec'; 
+        let emailsData = [];
+
+        function fetchEmails() {
+            const listEl = document.getElementById('email-list');
+            const statusEl = document.getElementById('status-msg');
+            const frameEl = document.getElementById('email-frame');
+            const emptyState = document.getElementById('empty-state');
+            const btnEl = document.getElementById('btn-refresh');
+            
+            statusEl.textContent = 'Đang đồng bộ danh sách email...';
+            statusEl.style.color = '#aaa';
+            btnEl.disabled = true;
+            listEl.innerHTML = '';
+            frameEl.style.display = 'none';
+            emptyState.style.display = 'block';
+            emptyState.textContent = 'Đang tải dữ liệu...';
+
+            fetch(SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.hasEmails && data.emails.length > 0) {
+                        emailsData = data.emails;
+                        renderEmailList(emailsData);
+                        statusEl.textContent = `Đã tải ${emailsData.length} email mới nhất.`;
+                        statusEl.style.color = '#4caf50'; // Xanh lá
+                        
+                        // Tự động mở email đầu tiên ngay khi tải xong
+                        selectEmail(0);
+                    } else {
+                        listEl.innerHTML = '<div style="padding:20px; color:#aaa; text-align:center;">Hộp thư trống.<br><br>Không có email Netflix nào trong 24h qua.</div>';
+                        statusEl.textContent = 'Không có thư mới.';
+                        statusEl.style.color = '#ff9800'; // Cam
+                        emptyState.textContent = 'Không có email nào để hiển thị';
+                    }
+                })
+                .catch(err => {
+                    statusEl.textContent = 'Lỗi kết nối đến máy chủ Google.';
+                    statusEl.style.color = '#E50914'; // Đỏ
+                    emptyState.textContent = 'Lỗi hệ thống';
+                    console.error(err);
+                })
+                .finally(() => {
+                    btnEl.disabled = false;
+                });
+        }
+
+        function renderEmailList(emails) {
+            const listEl = document.getElementById('email-list');
+            listEl.innerHTML = '';
+            
+            emails.forEach((email, index) => {
+                const div = document.createElement('div');
+                div.className = 'email-item';
+                div.id = 'email-item-' + index;
+                div.onclick = () => selectEmail(index); // Bấm vào sẽ gọi hàm mở thư
+                
+                div.innerHTML = `
+                    <div class="email-subject">${email.subject || 'Không có tiêu đề'}</div>
+                    <div class="email-date">${email.date}</div>
+                `;
+                listEl.appendChild(div);
+            });
+        }
+
+       function selectEmail(index) {
+            // Xóa viền đỏ ở thư cũ
+            document.querySelectorAll('.email-item').forEach(el => el.classList.remove('active'));
+            // Thêm viền đỏ vào thư vừa bấm
+            document.getElementById('email-item-' + index).classList.add('active');
+            
+            const frameEl = document.getElementById('email-frame');
+            const emptyState = document.getElementById('empty-state');
+            
+            emptyState.style.display = 'none';
+            frameEl.style.display = 'block';
+            
+            // ÉP CÁC NÚT BẤM MỞ SANG TAB MỚI
+            let rawHtml = emailsData[index].html;
+            
+            // Chèn thẻ <base target="_blank"> vào đầu email để trình duyệt biết phải mở link ở tab mới
+            if (rawHtml.includes('<head>')) {
+                rawHtml = rawHtml.replace('<head>', '<head><base target="_blank">');
+            } else {
+                rawHtml = '<base target="_blank">' + rawHtml;
+            }
+            
+            // Bơm HTML đã chỉnh sửa vào khung bên phải
+            frameEl.srcdoc = rawHtml;
+        }
+
+        // Tự động chạy khi vừa mở web
+        window.onload = fetchEmails;
+    </script>
+</body>
+</html>
