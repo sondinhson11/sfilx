@@ -102,9 +102,10 @@ const PlayerController = {
       this.hlsInstance = null;
     }
     if (this.playerInstance) this.playerInstance.pause();
+    videoElement.pause();
     videoElement.removeAttribute('src');
     videoElement.load();
-    embedElement.removeAttribute('src');
+    embedElement.src = 'about:blank';
     embedElement.classList.add('hidden');
     videoElement.closest('.plyr')?.classList.remove('hidden');
     this.setQualityOptions([], false, 'Chưa chọn nguồn phát');

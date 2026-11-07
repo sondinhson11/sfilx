@@ -250,6 +250,9 @@ const app = {
   },
 
   showPage(pageName) {
+    if (this.currentPage === 'watch' && pageName !== 'watch') {
+      PlayerController.clearStream();
+    }
     this.currentPage = pageName;
     document.querySelectorAll('.spa-page').forEach(page => page.classList.add('hidden'));
 
